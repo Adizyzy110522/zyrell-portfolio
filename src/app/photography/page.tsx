@@ -41,6 +41,61 @@ const albums: Album[] = [
         `${R2_BASE_URL}/photography/alvienna-louise/${file}`
     ),
   },
+  {
+    number: "03",
+    title: "Brainwave BPO Boys",
+    slug: "brainwave-portraits",
+    category: "PORTRAIT",
+    year: "2026",
+    images: ["IMG_8823.jpg", "IMG_8874.jpg", "IMG_8864.jpg"].map(
+     (file) =>
+        `${R2_BASE_URL}/photography/brainwave-portraits/${file}`
+    ),
+  },
+    {
+    number: "04",
+    title: "Marc Dominic",
+    slug: "marc-dominic",
+    category: "PORTRAIT",
+    year: "2026",
+    images: ["DSC_3102.jpg", "DSC_3098.jpg", "DSC_3105.jpg"].map(
+     (file) =>
+        `${R2_BASE_URL}/photography/marc-dominic/${file}`
+    ),
+  },
+  {
+    number: "05",
+    title: "Maasin City Fiesta 2026",
+    slug: "maasin-fiesta-2026",
+    category: "EVENT / DOCUMENTARY",
+    year: "2026",
+    images: ["DSC_3240.jpg", "DSC_3183.jpg", "DSC_3218.jpg", "DSC_3228.jpg"].map(
+      (file) =>
+        `${R2_BASE_URL}/photography/maasin-fiesta-2026/${file}`
+    ),
+  },
+  {
+    number: "06",
+    title: "Blue Deep Resort",
+    slug: "blue-deep-resort",
+    category: "COMMERCIAL",
+    year: "2026",
+    images: ["DSC_3625.jpg", "DSC_3619.jpg", "IMG_8911.jpg", "IMG_9153.jpg"].map(
+      (file) =>
+        `${R2_BASE_URL}/photography/blue-deep-resort/${file}`
+    ),
+    },
+  {
+    number: "07",
+    title: "Southern Leyte",
+    slug: "southern-leyte",
+    category: "STREET",
+    year: "2026",
+    images: ["DSC_3527.jpg", "DSC_3573.jpg", "DSC_3575.jpg", "DSC_2845.jpg"].map(
+      (file) =>
+        `${R2_BASE_URL}/photography/southern-leyte/${file}`
+    ),
+  }
 ];
 
 const categories = [
@@ -48,7 +103,7 @@ const categories = [
   "PORTRAIT",
   "EVENT / DOCUMENTARY",
   "STREET",
-  "CONCEPTUAL",
+  "COMMERCIAL",
 ];
 
 // Album cover: automatically crossfades between its first four images.
