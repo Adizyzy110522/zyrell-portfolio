@@ -9,7 +9,7 @@ const mainNavigation = [
   { label: "VIDEOGRAPHY", href: "/videography" },
   { label: "PHOTOGRAPHY", href: "/photography" },
   { label: "VIDEO EDITS", href: "/video-edits" },
-  { label: "GRAPHICS DESIGN", href: "/graphics-design" },
+  { label: "GRAPHIC DESIGNS", href: "/graphics-design" },
 ];
 
 const secondaryNavigation = [
