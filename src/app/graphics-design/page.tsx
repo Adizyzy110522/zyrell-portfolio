@@ -69,16 +69,21 @@ function ProjectCard({
         href={`/graphics-design/${project.slug}`}
         className="group block cursor-pointer"
         aria-label={`View ${project.title} graphic design project`}
-      >
-        <div className="relative aspect-[4/3] overflow-hidden bg-[#151516]">
-          {!coverUnavailable && (
-            <img
-              src={coverUrl}
-              alt={`${project.title} album cover`}
-              loading="lazy"
-              onError={() => setCoverUnavailable(true)}
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-            />
+      >   
+          <div
+            className="relative aspect-[4/3] overflow-hidden bg-[#151516]"
+            onContextMenu={(event) => event.preventDefault()}
+          >
+          {!coverUnavailable && (  
+          <img
+            src={coverUrl}
+            alt={`${project.title} album cover`}
+            loading="lazy"
+            draggable={false}
+            onContextMenu={(event) => event.preventDefault()}
+            onError={() => setCoverUnavailable(true)}
+            className="absolute inset-0 h-full w-full select-none object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+          />
           )}
 
           {coverUnavailable && (

@@ -530,13 +530,18 @@ export default function GraphicsDesignProjectPage() {
                     aria-label={`View design ${design.filename}`}
                     className="group block w-full cursor-zoom-in text-left"
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden bg-[#151516]">
+                    <div
+                      className="relative aspect-[4/3] overflow-hidden bg-[#151516]"
+                      onContextMenu={(event) => event.preventDefault()}
+                    >
                       {!imageErrors[design.key] ? (
                         <motion.img
                           src={getImageUrl(design.key)}
                           alt={`${project.title} — ${design.filename}`}
                           loading={index < 3 ? "eager" : "lazy"}
                           decoding="async"
+                          draggable={false}
+                          onContextMenu={(event) => event.preventDefault()}
                           onError={() =>
                             setImageErrors((current) => ({
                               ...current,
@@ -545,7 +550,7 @@ export default function GraphicsDesignProjectPage() {
                           }
                           whileHover={{ scale: 1.035 }}
                           transition={{ duration: 0.5, ease: "easeOut" }}
-                          className="absolute inset-0 h-full w-full object-cover"
+                          className="absolute inset-0 h-full w-full select-none object-cover"
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center p-5 text-center text-[9px] tracking-[0.15em] text-white/55">
@@ -594,6 +599,7 @@ export default function GraphicsDesignProjectPage() {
             role="dialog"
             aria-modal="true"
             aria-label="Design viewer"
+            onContextMenu={(event) => event.preventDefault()}
             onMouseMove={scheduleControlFade}
             onClick={(event) => {
               if (event.target === event.currentTarget) closeViewer();
@@ -803,8 +809,10 @@ export default function GraphicsDesignProjectPage() {
                         <img
                           src={getImageUrl(design.key)}
                           alt=""
+                          draggable={false}
+                          onContextMenu={(event) => event.preventDefault()}
                           loading="lazy"
-                          className="h-full w-full object-cover"
+                          className="h-full w-full select-none object-cover"
                         />
                         {index === selectedIndex && (
                           <span className="absolute inset-x-0 bottom-0 h-[2px] bg-[#B82134]" />

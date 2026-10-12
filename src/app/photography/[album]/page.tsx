@@ -273,15 +273,20 @@ const PhotoGrid = memo(function PhotoGrid({
           aria-label={`View photograph ${photo.filename}`}
           className="group block w-full cursor-zoom-in text-left"
         >
-          <div className="relative aspect-[4/3] overflow-hidden bg-[#151516]">
+         <div
+            className="relative aspect-[4/3] overflow-hidden bg-[#151516]"
+            onContextMenu={(event) => event.preventDefault()}
+          >
             <motion.img
               src={getImageUrl(photo.key)}
               alt={`${album.title} — ${photo.filename}`}
               loading={index < 3 ? "eager" : "lazy"}
               decoding="async"
+              draggable={false}
+              onContextMenu={(event) => event.preventDefault()}
               whileHover={{ scale: 1.035 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full select-none object-cover"
             />
 
             <div className="absolute left-4 top-4 z-10 text-[9px] tracking-[0.2em] text-[#F8F8F5]/75">
@@ -742,6 +747,7 @@ export default function PhotographyAlbumPage() {
                     )}
                     alt="Previous photograph preview"
                     draggable={false}
+                    onContextMenu={(event) => event.preventDefault()}
                     className="h-full w-full select-none object-contain"
                     style={{
                       maskImage:
@@ -774,26 +780,27 @@ export default function PhotographyAlbumPage() {
                   className="relative z-20 flex h-full w-full items-center justify-center overflow-hidden"
                 >
                   <motion.img
-                    src={getImageUrl(selectedPhoto.key)}
-                    alt={`${album.title} — ${selectedPhoto.filename}`}
-                    draggable={false}
-                    onMouseDown={handleImageMouseDown}
-                    animate={{ opacity: 1 }}
-                    className={`max-h-[78vh] max-w-[86vw] select-none object-contain md:max-h-[82vh] md:max-w-[76vw] ${
-                      focusMode
-                        ? dragging
-                          ? "cursor-grabbing"
-                          : "cursor-grab"
-                        : "cursor-zoom-in"
-                    }`}
-                    style={{
-                      x: pan.x,
-                      y: pan.y,
-                      scale: zoom,
-                      transformOrigin: "center center",
-                      touchAction: "none",
-                    }}
-                  />
+                  src={getImageUrl(selectedPhoto.key)}
+                  alt={`${album.title} — ${selectedPhoto.filename}`}
+                  draggable={false}
+                  onContextMenu={(event) => event.preventDefault()}
+                  onMouseDown={handleImageMouseDown}
+                  animate={{ opacity: 1 }}
+                  className={`max-h-[78vh] max-w-[86vw] select-none object-contain md:max-h-[82vh] md:max-w-[76vw] ${
+                    focusMode
+                      ? dragging
+                        ? "cursor-grabbing"
+                        : "cursor-grab"
+                      : "cursor-zoom-in"
+                  }`}
+                  style={{
+                    x: pan.x,
+                    y: pan.y,
+                    scale: zoom,
+                    transformOrigin: "center center",
+                    touchAction: "none",
+                  }}
+                />
                 </motion.div>
               </AnimatePresence>
 
@@ -814,6 +821,7 @@ export default function PhotographyAlbumPage() {
                     )}
                     alt="Next photograph preview"
                     draggable={false}
+                    onContextMenu={(event) => event.preventDefault()}
                     className="h-full w-full select-none object-contain"
                     style={{
                       maskImage:
@@ -900,8 +908,9 @@ export default function PhotographyAlbumPage() {
                       src={getImageUrl(photo.key)}
                       alt=""
                       draggable={false}
+                      onContextMenu={(event) => event.preventDefault()}
                       loading="lazy"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full select-none object-cover"
                     />
                     {index === selectedIndex && (
                       <span className="absolute inset-0 border border-[#F8F8F5]" />

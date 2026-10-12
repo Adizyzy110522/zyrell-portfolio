@@ -335,7 +335,10 @@ export default function VideoEditProjectPage() {
                   aria-label={`View video: ${getVideoTitle(video.filename)}`}
                 >
                   {/* Preview frame */}
-                  <div className="relative aspect-video overflow-hidden bg-[#151516]">
+                  <div
+                    className="relative aspect-video overflow-hidden bg-[#151516]"
+                    onContextMenu={(event) => event.preventDefault()}
+                  >
                     <video
                       className="absolute inset-0 h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
                       src={getVideoUrl(video.key)}
@@ -346,8 +349,9 @@ export default function VideoEditProjectPage() {
                       preload="metadata"
                       tabIndex={-1}
                       aria-hidden="true"
+                      draggable={false}
+                      onContextMenu={(event) => event.preventDefault()}
                     />
-
                     {/* Video number */}
                     <div className="pointer-events-none absolute left-4 top-4 z-20 text-[9px] tracking-[0.2em] text-[#F8F8F5]/70">
                       {String(index + 1).padStart(2, "0")}
@@ -445,7 +449,10 @@ export default function VideoEditProjectPage() {
               </div>
 
               {/* Player */}
-              <div className="relative min-h-0 flex-1 overflow-hidden bg-black">
+             <div
+                className="relative min-h-0 flex-1 overflow-hidden bg-black"
+                onContextMenu={(event) => event.preventDefault()}
+              >
                 <video
                   key={selectedVideo.key}
                   ref={videoRef}
@@ -453,6 +460,10 @@ export default function VideoEditProjectPage() {
                   autoPlay
                   playsInline
                   preload="auto"
+                  controlsList="nodownload"
+                  disablePictureInPicture
+                  draggable={false}
+                  onContextMenu={(event) => event.preventDefault()}
                   className="block h-auto max-h-[55dvh] w-full bg-black object-contain sm:max-h-[60dvh]"
                   onLoadedMetadata={(event) => {
                     const video = event.currentTarget;

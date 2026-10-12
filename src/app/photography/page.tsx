@@ -122,25 +122,27 @@ function AlbumCover({ images }: { images: string[] }) {
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#151516]">
-      {images.map((src, index) => (
-        <motion.img
-          key={src}
-          src={src}
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          decoding="async"
-          initial={false}
-          animate={{
-            opacity: activeIndex === index ? 1 : 0,
-            scale: activeIndex === index ? 1 : 1.035,
-          }}
-          transition={{
-            opacity: { duration: 1, ease: "easeInOut" },
-            scale: { duration: 1.4, ease: "easeOut" },
-          }}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+      {images.map((src, index) => (     
+      <motion.img
+        key={src}
+        src={src}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+        onContextMenu={(event) => event.preventDefault()}
+        initial={false}
+        animate={{
+          opacity: activeIndex === index ? 1 : 0,
+          scale: activeIndex === index ? 1 : 1.035,
+        }}
+        transition={{
+          opacity: { duration: 1, ease: "easeInOut" },
+          scale: { duration: 1.4, ease: "easeOut" },
+        }}
+        className="absolute inset-0 h-full w-full select-none object-cover"
+      />
       ))}
     </div>
   );
@@ -284,8 +286,11 @@ export default function PhotographyPage() {
                   href={`/photography/${album.slug}`}
                   className="group block cursor-pointer"
                 >
-                  {/* Album Frame */}
-                  <div className="relative aspect-[4/3] overflow-hidden bg-[#151516]">
+                  {/* Album Frame */}                
+                <div
+                  className="relative aspect-[4/3] overflow-hidden bg-[#151516]"
+                  onContextMenu={(event) => event.preventDefault()}
+                >
                     {/* Animated cover or empty placeholder */}
                     {album.images.length > 0 && (
                       <AlbumCover images={album.images} />

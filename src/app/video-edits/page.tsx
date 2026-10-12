@@ -284,21 +284,30 @@ export default function VideoEditsPage() {
                     className="group block cursor-pointer"
                   >
                     {/* Project Frame */}
-                    <div className="relative aspect-video overflow-hidden bg-[#151516]">
+                    <div
+                    className="relative aspect-video overflow-hidden bg-[#151516]"
+                    onContextMenu={(event) => event.preventDefault()}
+                  >
                       {/* Muted video preview from R2 */}
                       {previewUrls[project.slug] && (
-                        <video
-                          key={previewUrls[project.slug]}
-                          src={previewUrls[project.slug]}
-                          autoPlay
-                          muted
-                          loop
-                          playsInline
-                          preload="metadata"
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                          aria-hidden="true"
-                          tabIndex={-1}
-                        />
+                        
+                      <video
+                        key={previewUrls[project.slug]}
+                        src={previewUrls[project.slug]}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                        aria-hidden="true"
+                        tabIndex={-1}
+                        draggable={false}
+                        controlsList="nodownload"
+                        disablePictureInPicture
+                        onContextMenu={(event) => event.preventDefault()}
+                      />
+
                       )}
 
                       {/* Project number */}
