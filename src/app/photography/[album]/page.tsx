@@ -1,10 +1,16 @@
 
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import {
+  AnimatePresence,
+  motion,
+} from "framer-motion";
+import {
+  memo,
   useCallback,
   useEffect,
   useRef,
@@ -233,12 +239,77 @@ function HelpTooltip({
         {children}
       </div>
 
-      <div className="pointer-events-none absolute bottom-full left-0 z-50 mb-3 w-max max-w-[min(220px,calc(100vw-32px))] -translate-y-1 rounded bg-[#F8F8F5] px-3 py-2 text-[9px] leading-4 tracking-[0.08em] text-[#151516] opacity-0 shadow-xl transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+      <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-max max-w-[220px] -translate-x-1/2 translate-y-1 rounded bg-[#F8F8F5] px-3 py-2 text-[9px] leading-4 tracking-[0.08em] text-[#151516] opacity-0 shadow-xl transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
         {label}
       </div>
     </div>
   );
 }
+
+const PhotoGrid = memo(function PhotoGrid({
+  photos,
+  album,
+  onSelect,
+}: {
+  photos: Photo[];
+  album: Album;
+  onSelect: (index: number) => void;
+}) {
+  return (
+    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {photos.map((photo, index) => (
+        <motion.button
+          type="button"
+          key={photo.key}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.08 }}
+          transition={{
+            delay: Math.min(index * 0.035, 0.35),
+            duration: 0.55,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          onClick={() => onSelect(index)}
+          aria-label={`View photograph ${photo.filename}`}
+          className="group block w-full cursor-zoom-in text-left"
+        >
+          <div className="relative aspect-[4/3] overflow-hidden bg-[#151516]">
+            <motion.img
+              src={getImageUrl(photo.key)}
+              alt={`${album.title} — ${photo.filename}`}
+              loading={index < 3 ? "eager" : "lazy"}
+              decoding="async"
+              whileHover={{ scale: 1.035 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+
+            <div className="absolute left-4 top-4 z-10 text-[9px] tracking-[0.2em] text-[#F8F8F5]/75">
+              {String(index + 1).padStart(2, "0")}
+            </div>
+
+            <div className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between p-5">
+              <div>
+                <h2 className="text-sm font-bold tracking-[0.03em] text-[#F8F8F5]">
+                  PHOTO {String(index + 1).padStart(2, "0")}
+                </h2>
+                <p className="mt-2 text-[8px] tracking-[0.18em] text-[#F8F8F5]/65">
+                  {album.category}
+                </p>
+              </div>
+              <span className="text-lg text-[#F8F8F5]/80 transition-transform duration-300 group-hover:scale-110">
+                ↗
+              </span>
+            </div>
+
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-28 bg-gradient-to-t from-[#151516] via-[#151516]/60 to-transparent" />
+            <div className="absolute bottom-0 left-0 z-20 h-[2px] w-0 bg-[#B82134] transition-all duration-500 group-hover:w-full" />
+          </div>
+        </motion.button>
+      ))}
+    </div>
+  );
+});
 
 export default function PhotographyAlbumPage() {
   const params = useParams<{ album: string }>();
@@ -251,14 +322,12 @@ export default function PhotographyAlbumPage() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [backgroundIndex, setBackgroundIndex] = useState(0);
-
   const [direction, setDirection] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
 
   const thumbnailRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const thumbnailTrackRef = useRef<HTMLDivElement | null>(null);
   const dragStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const isPanning = useRef(false);
 
@@ -301,7 +370,7 @@ export default function PhotographyAlbumPage() {
       }
     }
 
-    loadPhotos();
+    void loadPhotos();
 
     return () => controller.abort();
   }, [albumSlug, album, reloadKey]);
@@ -335,9 +404,7 @@ export default function PhotographyAlbumPage() {
       setDirection(nextDirection);
       setSelectedIndex((current) => {
         if (current === null) return null;
-        return (
-          (current + nextDirection + photos.length) % photos.length
-        );
+        return (current + nextDirection + photos.length) % photos.length;
       });
       resetZoom();
     },
@@ -378,9 +445,7 @@ export default function PhotographyAlbumPage() {
   useEffect(() => {
     if (selectedIndex === null) return;
 
-    const activeThumb = thumbnailRefs.current[selectedIndex];
-
-    activeThumb?.scrollIntoView({
+    thumbnailRefs.current[selectedIndex]?.scrollIntoView({
       behavior: "smooth",
       block: "nearest",
       inline: "center",
@@ -568,61 +633,17 @@ export default function PhotographyAlbumPage() {
               </p>
             )}
 
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {photos.map((photo, index) => (
-                <motion.button
-                  type="button"
-                  key={photo.key}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: Math.min(index * 0.035, 0.35),
-                    duration: 0.55,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  onClick={() => {
-                    setDirection(1);
-                    setSelectedIndex(index);
-                    resetZoom();
-                  }}
-                  aria-label={`View photograph ${photo.filename}`}
-                  className="group block w-full cursor-zoom-in text-left"
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-[#151516]">
-                    <motion.img
-                      src={getImageUrl(photo.key)}
-                      alt={`${album.title} — ${photo.filename}`}
-                      loading={index < 3 ? "eager" : "lazy"}
-                      decoding="async"
-                      whileHover={{ scale: 1.035 }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
-
-                    <div className="absolute left-4 top-4 z-10 text-[9px] tracking-[0.2em] text-[#F8F8F5]/75">
-                      {String(index + 1).padStart(2, "0")}
-                    </div>
-
-                    <div className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between p-5">
-                      <div>
-                        <h2 className="text-sm font-bold tracking-[0.03em] text-[#F8F8F5]">
-                          PHOTO {String(index + 1).padStart(2, "0")}
-                        </h2>
-                        <p className="mt-2 text-[8px] tracking-[0.18em] text-[#F8F8F5]/65">
-                          {album.category}
-                        </p>
-                      </div>
-                      <span className="text-lg text-[#F8F8F5]/80 transition-transform duration-300 group-hover:scale-110">
-                        ↗
-                      </span>
-                    </div>
-
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-28 bg-gradient-to-t from-[#151516] via-[#151516]/60 to-transparent" />
-                    <div className="absolute bottom-0 left-0 z-20 h-[2px] w-0 bg-[#B82134] transition-all duration-500 group-hover:w-full" />
-                  </div>
-                </motion.button>
-              ))}
-            </div>
+            {!loading && !error && photos.length > 0 && (
+              <PhotoGrid
+                photos={photos}
+                album={album}
+                onSelect={(index) => {
+                  setDirection(1);
+                  setSelectedIndex(index);
+                  resetZoom();
+                }}
+              />
+            )}
           </section>
         </section>
       </main>
@@ -666,7 +687,7 @@ export default function PhotographyAlbumPage() {
                   closeViewer();
                 }}
                 aria-label="Close image viewer"
-                className="pointer-events-auto flex h-12 w-12 items-center justify-center text-3xl font-light text-white/65 transition hover:text-white"
+                className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border border-white/15 text-3xl font-light text-white/75 transition hover:border-white/50 hover:bg-white/10 hover:text-white"
               >
                 ×
               </button>
@@ -696,8 +717,7 @@ export default function PhotographyAlbumPage() {
             </AnimatePresence>
 
             {/* Three-photo carousel stage */}
-            <motion.div
-              animate={{ opacity: 1 }}
+            <div
               className={`absolute inset-x-0 bottom-[136px] top-[70px] flex items-center justify-center overflow-hidden transition-[top,bottom] duration-300 ${
                 focusMode ? "!bottom-0 !top-0" : ""
               }`}
@@ -733,25 +753,16 @@ export default function PhotographyAlbumPage() {
                 </motion.button>
               )}
 
-              {/* Main selected photograph */}
+              {/* Main image: wrapper animates slides, image handles zoom and pan */}
               <AnimatePresence mode="popLayout" custom={direction}>
-                <motion.img
+                <motion.div
                   key={selectedPhoto.key}
                   custom={direction}
-                  src={getImageUrl(selectedPhoto.key)}
-                  alt={`${album.title} — ${selectedPhoto.filename}`}
-                  draggable={false}
-                  onMouseDown={handleImageMouseDown}
                   initial={{
                     opacity: 0,
                     x: direction * 70,
                   }}
-                  animate={{
-                    opacity: 1,
-                    x: pan.x,
-                    y: pan.y,
-                    scale: zoom,
-                  }}
+                  animate={{ opacity: 1, x: 0 }}
                   exit={{
                     opacity: 0,
                     x: direction * -70,
@@ -760,18 +771,30 @@ export default function PhotographyAlbumPage() {
                     duration: dragging ? 0 : 0.3,
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                  className={`relative z-20 max-h-[78vh] max-w-[86vw] select-none object-contain md:max-h-[82vh] md:max-w-[76vw] ${
-                    focusMode
-                      ? dragging
-                        ? "cursor-grabbing"
-                        : "cursor-grab"
-                      : "cursor-zoom-in"
-                  }`}
-                  style={{
-                    transformOrigin: "center center",
-                    touchAction: "none",
-                  }}
-                />
+                  className="relative z-20 flex h-full w-full items-center justify-center overflow-hidden"
+                >
+                  <motion.img
+                    src={getImageUrl(selectedPhoto.key)}
+                    alt={`${album.title} — ${selectedPhoto.filename}`}
+                    draggable={false}
+                    onMouseDown={handleImageMouseDown}
+                    animate={{ opacity: 1 }}
+                    className={`max-h-[78vh] max-w-[86vw] select-none object-contain md:max-h-[82vh] md:max-w-[76vw] ${
+                      focusMode
+                        ? dragging
+                          ? "cursor-grabbing"
+                          : "cursor-grab"
+                        : "cursor-zoom-in"
+                    }`}
+                    style={{
+                      x: pan.x,
+                      y: pan.y,
+                      scale: zoom,
+                      transformOrigin: "center center",
+                      touchAction: "none",
+                    }}
+                  />
+                </motion.div>
               </AnimatePresence>
 
               {/* Next preview */}
@@ -801,7 +824,7 @@ export default function PhotographyAlbumPage() {
                   />
                 </motion.button>
               )}
-            </motion.div>
+            </div>
 
             {/* Large circular previous/next controls */}
             <AnimatePresence>
@@ -852,10 +875,7 @@ export default function PhotographyAlbumPage() {
               }`}
               onClick={(event) => event.stopPropagation()}
             >
-              <div
-                ref={thumbnailTrackRef}
-                className="flex items-center gap-2 overflow-x-auto px-[calc(50%-26px)] py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              >
+              <div className="flex items-center gap-2 overflow-x-auto px-[calc(50%-26px)] py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {photos.map((photo, index) => (
                   <button
                     key={photo.key}
@@ -870,10 +890,10 @@ export default function PhotographyAlbumPage() {
                       setSelectedIndex(index);
                       resetZoom();
                     }}
-                    className={`relative h-12 w-12 flex-none overflow-hidden border transition-all duration-300 md:h-[52px] md:w-[52px] ${
+                    className={`relative h-12 w-12 flex-none overflow-hidden transition-all duration-300 md:h-[52px] md:w-[52px] ${
                       index === selectedIndex
-                        ? "scale-110 border-[#B82134] opacity-100"
-                        : "border-transparent opacity-40 hover:opacity-80"
+                        ? "scale-110 opacity-100"
+                        : "opacity-40 hover:opacity-80"
                     }`}
                   >
                     <img
@@ -883,12 +903,15 @@ export default function PhotographyAlbumPage() {
                       loading="lazy"
                       className="h-full w-full object-cover"
                     />
+                    {index === selectedIndex && (
+                      <span className="absolute inset-0 border border-[#F8F8F5]" />
+                    )}
                   </button>
                 ))}
               </div>
             </motion.div>
 
-            {/* Bottom-left navigation icons and hover tooltips */}
+            {/* Bottom-left navigation icons and tooltips */}
             <motion.div
               animate={{
                 opacity: focusMode ? 0 : 1,
