@@ -208,7 +208,6 @@ export default function GraphicsDesignProjectPage() {
 
   useEffect(() => {
     if (!project) {
-      setLoading(false);
       return;
     }
 
