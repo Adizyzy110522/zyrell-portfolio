@@ -15,7 +15,7 @@ const projects = [
     slug: "charles-x-alexandra",
     category: "POSTERS",
     year: "2026",
-    cover: "graphic-designs/charles-x-alexandra/charlesxalexandra_cover.jpg",
+    cover: "graphic-designs/charles-x-alexandra/charlesxalexandra_cover.png",
   },
   {
     number: "02",

@@ -108,17 +108,37 @@ const categories = [
 
 // Album cover: automatically crossfades between its first four images.
 function AlbumCover({ images }: { images: string[] }) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(() =>
+  Math.floor(Math.random() * images.length)
+);
 
-  useEffect(() => {
-    if (images.length < 2) return;
+      useEffect(() => {
+      if (images.length <= 1) return;
 
-    const interval = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % images.length);
-    }, 2800);
+      let timeoutId: ReturnType<typeof setTimeout>;
 
-    return () => window.clearInterval(interval);
-  }, [images]);
+      const showNextImage = () => {
+        setActiveIndex((current) => {
+          let nextIndex = Math.floor(Math.random() * images.length);
+
+          // Avoid showing the same image twice in a row.
+          while (images.length > 1 && nextIndex === current) {
+            nextIndex = Math.floor(Math.random() * images.length);
+          }
+
+          return nextIndex;
+        });
+
+        // Random delay between 2.8 and 5.5 seconds.
+        const nextDelay = 2800 + Math.random() * 2700;
+        timeoutId = setTimeout(showNextImage, nextDelay);
+      };
+
+      // Give each album a different initial delay.
+      timeoutId = setTimeout(showNextImage, 500 + Math.random() * 2500);
+
+      return () => clearTimeout(timeoutId);
+    }, [images]);
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#151516]">
