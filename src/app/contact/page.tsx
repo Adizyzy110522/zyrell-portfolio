@@ -1,7 +1,7 @@
 
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import emailjs from "@emailjs/browser";
 import { useState } from "react";
 
@@ -15,7 +15,7 @@ const services = [
 const ease = [0.22, 1, 0.36, 1] as const;
 
 type FormMessage = {
-  type: "success" | "error";
+  type: "error";
   text: string;
 };
 
@@ -23,6 +23,8 @@ export default function ContactPage() {
   const [selectedService, setSelectedService] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState<FormMessage | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successModalMessage, setSuccessModalMessage] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,7 +36,6 @@ export default function ContactPage() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-
     const name = String(formData.get("name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
     const service = selectedService || "Not specified";
@@ -96,39 +97,45 @@ export default function ContactPage() {
           publicKey
         );
 
-        setFormMessage({
-          type: "success",
-          text: "Your message has been sent successfully!",
-        });
+        setSuccessModalMessage(
+          "Please check your inbox for the confirmation email. If you don't see it, check your spam or junk folder."
+        );
       } catch (confirmationError) {
         console.error(
           "The enquiry was received, but the confirmation email failed:",
           confirmationError
         );
 
-        setFormMessage({
-          type: "success",
-          text: "Your enquiry was received, but the confirmation email could not be sent.",
-        });
+        setSuccessModalMessage(
+          "Your enquiry has been received successfully, but we couldn't send the confirmation email. Please check your inbox and try your spam or junk folder. You don't need to submit the form again."
+        );
       }
-    } catch (error: unknown) {
-  if (error && typeof error === "object") {
-    const emailJSError = error as {
-      status?: number;
-      text?: string;
-      message?: string;
-    };
 
-    console.error("Contact form submission failed:", {
-      status: emailJSError.status,
-      text: emailJSError.text,
-      message: emailJSError.message,
-      error,
-    });
-  } else {
-    console.error("Contact form submission failed:", error);
-  }
-} finally {
+      // Show the success modal after the enquiry notification succeeds.
+      setShowSuccessModal(true);
+    } catch (error: unknown) {
+      if (error && typeof error === "object") {
+        const emailJSError = error as {
+          status?: number;
+          text?: string;
+          message?: string;
+        };
+
+        console.error("Contact form submission failed:", {
+          status: emailJSError.status,
+          text: emailJSError.text,
+          message: emailJSError.message,
+          error,
+        });
+      } else {
+        console.error("Contact form submission failed:", error);
+      }
+
+      setFormMessage({
+        type: "error",
+        text: "Your message couldn't be sent. Please try again in a moment.",
+      });
+    } finally {
       setIsSubmitting(false);
     }
   }
@@ -157,7 +164,6 @@ export default function ContactPage() {
               <p className="text-[9px] font-medium tracking-[0.3em] text-[#151516]/40">
                 PORTFOLIO / 006
               </p>
-
               <h1 className="mt-3 text-4xl font-bold tracking-[-0.04em] text-[#B82134] md:text-5xl">
                 CONTACT ME
               </h1>
@@ -226,7 +232,6 @@ export default function ContactPage() {
                   >
                     FULL NAME
                   </label>
-
                   <input
                     id="name"
                     name="name"
@@ -247,7 +252,6 @@ export default function ContactPage() {
                   >
                     EMAIL ADDRESS
                   </label>
-
                   <input
                     id="email"
                     name="email"
@@ -317,7 +321,6 @@ export default function ContactPage() {
                 >
                   PROJECT DESCRIPTION
                 </label>
-
                 <textarea
                   id="description"
                   name="description"
@@ -329,18 +332,14 @@ export default function ContactPage() {
                 />
               </motion.div>
 
-              {/* Submission feedback */}
+              {/* Error feedback */}
               {formMessage && (
                 <motion.p
-                  role="status"
+                  role="alert"
                   aria-live="polite"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`text-[10px] leading-5 ${
-                    formMessage.type === "success"
-                      ? "text-green-700"
-                      : "text-[#B82134]"
-                  }`}
+                  className="text-[10px] leading-5 text-[#B82134]"
                 >
                   {formMessage.text}
                 </motion.p>
@@ -361,7 +360,6 @@ export default function ContactPage() {
                   <span>
                     {isSubmitting ? "SENDING..." : "SEND MESSAGE"}
                   </span>
-
                   {!isSubmitting && (
                     <span className="text-base font-light leading-none transition-transform duration-300 group-hover:translate-x-1">
                       →
@@ -389,18 +387,9 @@ export default function ContactPage() {
 
               <div className="flex flex-wrap gap-x-8 gap-y-3">
                 {[
-                  {
-                    label: "FACEBOOK",
-                    href: "#",
-                  },
-                  {
-                    label: "LINKEDIN",
-                    href: "#",
-                  },
-                  {
-                    label: "BEHANCE",
-                    href: "#",
-                  },
+                  { label: "FACEBOOK", href: "#" },
+                  { label: "LINKEDIN", href: "#" },
+                  { label: "BEHANCE", href: "#" },
                   {
                     label: "EMAIL",
                     href: "mailto:zyrellcazmirebaculi@gmail.com",
@@ -427,6 +416,99 @@ export default function ContactPage() {
           </div>
         </section>
       </section>
+
+      {/* Animated success modal */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/70 px-5 py-8 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="success-modal-title"
+              aria-describedby="success-modal-description"
+              className="my-auto w-full max-w-md border border-white/10 bg-[#151516] p-7 text-center shadow-2xl sm:p-9"
+              initial={{ opacity: 0, scale: 0.82, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 12 }}
+              transition={{
+                type: "spring",
+                stiffness: 260,
+                damping: 22,
+              }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              {/* Success icon */}
+              <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#B82134]/15 text-[#E05A68]">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-7 w-7"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 12.5l4.5 4.5L19 7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+
+              <p className="mb-3 text-[10px] font-bold tracking-[0.3em] text-[#E05A68]">
+                MESSAGE STATUS
+              </p>
+
+              <h2
+                id="success-modal-title"
+                className="mb-4 text-2xl font-extrabold text-[#F8F8F5] sm:text-3xl"
+              >
+                Enquiry Sent Successfully!
+              </h2>
+
+              <p
+                id="success-modal-description"
+                className="mb-6 text-sm leading-7 text-[#B7B7B7]"
+              >
+                Thank you for reaching out to CazmireCreates. I&apos;ve
+                received your enquiry and appreciate your interest in my
+                creative services.
+              </p>
+
+              {/* Inbox reminder */}
+              <div className="mb-7 border-l-2 border-[#B82134] bg-white/[0.04] p-4 text-left">
+                <p className="mb-2 text-xs font-bold tracking-wider text-[#F8F8F5]">
+                  <span aria-hidden="true">✉ </span>
+                  CHECK YOUR INBOX
+                </p>
+
+                <p className="text-xs leading-6 text-[#B7B7B7]">
+                  {successModalMessage}
+                </p>
+              </div>
+
+              {/* Close modal */}
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full bg-[#B82134] px-6 py-4 text-xs font-bold tracking-[0.2em] text-white transition-colors duration-300 hover:bg-[#961a2a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B82134]"
+              >
+                GOT IT
+              </button>
+
+              <p className="mt-5 text-[10px] tracking-wider text-[#777777]">
+                CAZMIRECREATES
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
