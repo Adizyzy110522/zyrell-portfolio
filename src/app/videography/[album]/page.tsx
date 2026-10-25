@@ -1,5 +1,13 @@
 import Link from "next/link";
 
+// Replace these with the real slugs your /videography page links to,
+// e.g. href="/videography/wedding-film" -> { album: "wedding-film" }
+export function generateStaticParams() {
+  return [{ album: "sample" }];
+}
+
+export const dynamicParams = false;
+
 const videos = [
   {
     number: "01",
