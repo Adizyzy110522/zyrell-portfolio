@@ -15,6 +15,60 @@ const services = [
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
+
+const SUBMISSION_STORAGE_KEY = "cazmirecreates_contact_submissions_v1";
+const EMAIL_COOLDOWN_MS = 10 * 60 * 1000;
+const EMAIL_HOURLY_LIMIT = 3;
+const EMAIL_DAILY_LIMIT = 5;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+type StoredSubmission = {
+  email: string;
+  timestamp: number;
+  fingerprint: string;
+};
+
+function readStoredSubmissions(): StoredSubmission[] {
+  try {
+    const raw = window.localStorage.getItem(SUBMISSION_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item): item is StoredSubmission =>
+        item !== null &&
+        typeof item === "object" &&
+        typeof item.email === "string" &&
+        typeof item.timestamp === "number" &&
+        typeof item.fingerprint === "string"
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredSubmission(submission: StoredSubmission) {
+  try {
+    const cutoff = Date.now() - DAY_MS;
+    const records = readStoredSubmissions().filter(
+      (item) => item.timestamp >= cutoff
+    );
+    records.push(submission);
+    window.localStorage.setItem(SUBMISSION_STORAGE_KEY, JSON.stringify(records));
+  } catch {
+    // Storage may be disabled. The form can still work, but browser-side limits
+    // cannot be enforced when localStorage is unavailable.
+  }
+}
+
+function makeSubmissionFingerprint(email: string, service: string, description: string) {
+  return `${email}|${service.trim().toLowerCase()}|${description
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase()}`;
+}
+
 type FormMessage = {
   type: "error";
   text: string;
@@ -898,9 +952,65 @@ export default function ContactPage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     const name = String(formData.get("name") ?? "").trim();
-    const email = String(formData.get("email") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
     const service = selectedService || "Not specified";
     const description = String(formData.get("description") ?? "").trim();
+    const honeypot = String(formData.get("website") ?? "").trim();
+
+    // Quietly discard likely bot submissions without calling EmailJS.
+    if (honeypot) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (name.length < 2 || name.length > 120) {
+      setFormMessage({ type: "error", text: "Please enter a name between 2 and 120 characters." });
+      setIsSubmitting(false);
+      return;
+    }
+    if (email.length > 254 || !emailPattern.test(email)) {
+      setFormMessage({ type: "error", text: "Please enter a valid email address." });
+      setIsSubmitting(false);
+      return;
+    }
+    if (description.length < 10 || description.length > 5000) {
+      setFormMessage({ type: "error", text: "Please provide project details between 10 and 5,000 characters." });
+      setIsSubmitting(false);
+      return;
+    }
+
+    const now = Date.now();
+    const fingerprint = makeSubmissionFingerprint(email, service, description);
+    const emailRecords = readStoredSubmissions().filter((item) => item.email === email);
+    const recordsLastDay = emailRecords.filter((item) => now - item.timestamp < DAY_MS);
+    const recordsLastHour = emailRecords.filter((item) => now - item.timestamp < HOUR_MS);
+
+    if (recordsLastDay.some((item) => item.fingerprint === fingerprint)) {
+      setFormMessage({ type: "error", text: "You've already sent this message recently. Please wait before submitting it again." });
+      setIsSubmitting(false);
+      return;
+    }
+    const latestSubmission = emailRecords.reduce<StoredSubmission | null>(
+      (latest, item) => !latest || item.timestamp > latest.timestamp ? item : latest,
+      null
+    );
+    if (latestSubmission && now - latestSubmission.timestamp < EMAIL_COOLDOWN_MS) {
+      const minutes = Math.ceil((EMAIL_COOLDOWN_MS - (now - latestSubmission.timestamp)) / 60000);
+      setFormMessage({ type: "error", text: `Please wait about ${minutes} minute${minutes === 1 ? "" : "s"} before sending another enquiry from this email address.` });
+      setIsSubmitting(false);
+      return;
+    }
+    if (recordsLastHour.length >= EMAIL_HOURLY_LIMIT) {
+      setFormMessage({ type: "error", text: "This email address has reached the limit of 3 enquiries per hour. Please try again later." });
+      setIsSubmitting(false);
+      return;
+    }
+    if (recordsLastDay.length >= EMAIL_DAILY_LIMIT) {
+      setFormMessage({ type: "error", text: "This email address has reached the limit of 5 enquiries per day. Please try again tomorrow." });
+      setIsSubmitting(false);
+      return;
+    }
 
     const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
     const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
@@ -923,6 +1033,7 @@ export default function ContactPage() {
 
     try {
       await emailjs.send(serviceId, notificationTemplateId, notificationParams, publicKey);
+      saveStoredSubmission({ email, timestamp: Date.now(), fingerprint });
       form.reset();
       setSelectedService("");
 
@@ -1066,6 +1177,19 @@ export default function ContactPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-2.5 sm:gap-5">
+                <div
+                  aria-hidden="true"
+                  className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
+                >
+                  <label htmlFor="website">Leave this field empty</label>
+                  <input
+                    id="website"
+                    name="website"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-3 sm:gap-6">
                   <div>
                     <label htmlFor="name" className={labelClass}>FULL NAME <span className="text-[#E05A68]">*</span></label>
