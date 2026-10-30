@@ -51,6 +51,13 @@ const projects = [
     category: "DOCUMENTARY",
     year: "2026",
   },
+  {
+    number: "07",
+    title: "Mark Manson",
+    slug: "mark-manson",
+    category: "DOCUMENTARY",
+    year: "2026",
+  },
 ];
 
 const categories = [

@@ -9,6 +9,7 @@ export function generateStaticParams() {
     { project: "zeath-sportswear" },
     { project: "sample-test-edits" },
     { project: "cinematic-vlogs" },
+    { project: "mark-manson" },
   ];
 }
 
