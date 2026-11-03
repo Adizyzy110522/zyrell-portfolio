@@ -28,7 +28,7 @@ const projects = [
     title: "ENERGY DRINKS",
     slug: "energy-drinks",
     category: "PROMOTIONAL",
-    year: "2026",
+    year: "2025",
   },
   {
     number: "04",
@@ -56,6 +56,13 @@ const projects = [
     title: "Mark Manson",
     slug: "mark-manson",
     category: "DOCUMENTARY",
+    year: "2026",
+  },
+  {
+    number: "08",
+    title: "LearnPac Systems Shorts",
+    slug: "learnpac-shortform",
+    category: "CORPORATE",
     year: "2026",
   },
 ];

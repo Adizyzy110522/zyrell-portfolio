@@ -10,6 +10,7 @@ export function generateStaticParams() {
     { project: "sample-test-edits" },
     { project: "cinematic-vlogs" },
     { project: "mark-manson" },
+    { project: "learnpac-shortform" },
   ];
 }
 
