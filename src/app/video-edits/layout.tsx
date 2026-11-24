@@ -11,6 +11,7 @@ export function generateStaticParams() {
     { project: "cinematic-vlogs" },
     { project: "mark-manson" },
     { project: "learnpac-shortform" },
+    { project: "complyplus-presents-podcasts" },
   ];
 }
 

@@ -65,6 +65,13 @@ const projects = [
     category: "CORPORATE",
     year: "2026",
   },
+  {
+    number: "09",
+    title: "ComplyPlus Presents Podcasts",
+    slug: "complyplus-presents-podcasts",
+    category: "PODCASTS",
+    year: "2026",
+  },
 ];
 
 const categories = [
@@ -73,6 +80,7 @@ const categories = [
   "TEST EDITS",
   "PROMOTIONAL",
   "DOCUMENTARY",
+  "PODCASTS",
 ];
 
 type AlbumFile = {
@@ -81,37 +89,22 @@ type AlbumFile = {
 };
 
 type TileIconName =
-
   | "video"
-
   | "camera"
-
   | "film"
-
   | "palette"
-
   | "mail"
-
   | "user"
-
   | "close"
-
   | "arrow";
 
-
-
 type TileTiming = {
-
   open: number;
 
   exit: number;
-
 };
 
-
-
 type MenuTile = {
-
   id: string;
 
   label: string;
@@ -121,15 +114,10 @@ type MenuTile = {
   icon?: TileIconName;
 
   className: string;
-
 };
 
-
-
 const menuTiles: MenuTile[] = [
-
   {
-
     id: "home",
 
     label: "Home",
@@ -137,11 +125,9 @@ const menuTiles: MenuTile[] = [
     href: "/",
 
     className: "col-span-2 min-h-[clamp(72px,14dvh,108px)]",
-
   },
 
   {
-
     id: "videography",
 
     label: "Videography",
@@ -151,11 +137,9 @@ const menuTiles: MenuTile[] = [
     icon: "video",
 
     className: "min-h-[clamp(56px,11dvh,80px)]",
-
   },
 
   {
-
     id: "photography",
 
     label: "Photography",
@@ -165,11 +149,9 @@ const menuTiles: MenuTile[] = [
     icon: "camera",
 
     className: "min-h-[clamp(56px,11dvh,80px)]",
-
   },
 
   {
-
     id: "video-edits",
 
     label: "Video Edits",
@@ -179,11 +161,9 @@ const menuTiles: MenuTile[] = [
     icon: "film",
 
     className: "min-h-[clamp(56px,11dvh,80px)]",
-
   },
 
   {
-
     id: "graphic-designs",
 
     label: "Graphic Designs",
@@ -193,11 +173,9 @@ const menuTiles: MenuTile[] = [
     icon: "palette",
 
     className: "min-h-[clamp(56px,11dvh,80px)]",
-
   },
 
   {
-
     id: "contact",
 
     label: "Contact Me",
@@ -207,11 +185,9 @@ const menuTiles: MenuTile[] = [
     icon: "mail",
 
     className: "col-span-2 min-h-[clamp(42px,7dvh,54px)]",
-
   },
 
   {
-
     id: "about",
 
     label: "About Me",
@@ -221,29 +197,19 @@ const menuTiles: MenuTile[] = [
     icon: "user",
 
     className: "col-span-2 min-h-[clamp(42px,7dvh,54px)]",
-
   },
-
 ];
 
-
-
 function TileIcon({
-
   name,
 
   className = "h-6 w-6",
-
 }: {
-
   name: TileIconName;
 
   className?: string;
-
 }) {
-
   const common = {
-
     className,
 
     viewBox: "0 0 24 24",
@@ -259,67 +225,39 @@ function TileIcon({
     strokeLinejoin: "round" as const,
 
     "aria-hidden": true as const,
-
   };
 
-
-
   switch (name) {
-
     case "video":
-
       return (
-
         <svg {...common}>
-
           <rect x="3" y="5" width="13" height="14" rx="1" />
 
           <path d="m16 10 5-3v10l-5-3" />
-
         </svg>
-
       );
 
-
-
     case "camera":
-
       return (
-
         <svg {...common}>
-
           <path d="M4 7h4l2-2h4l2 2h4a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" />
 
           <circle cx="12" cy="13" r="3.5" />
-
         </svg>
-
       );
 
-
-
     case "film":
-
       return (
-
         <svg {...common}>
-
           <rect x="4" y="3" width="16" height="18" rx="1" />
 
           <path d="M8 3v18M16 3v18M4 8h4m-4 8h4m8-8h4m-4 8h4" />
-
         </svg>
-
       );
 
-
-
     case "palette":
-
       return (
-
         <svg {...common}>
-
           <path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1.5-3.3 1.8 1.8 0 0 1 1.4-3h1.2A4.9 4.9 0 0 0 22 9.8C22 6 17.5 3 12 3Z" />
 
           <circle cx="7.5" cy="10" r="1" />
@@ -327,81 +265,46 @@ function TileIcon({
           <circle cx="10" cy="6.8" r="1" />
 
           <circle cx="15" cy="7" r="1" />
-
         </svg>
-
       );
 
-
-
     case "mail":
-
       return (
-
         <svg {...common}>
-
           <rect x="3" y="5" width="18" height="14" rx="1" />
 
           <path d="m4 7 8 6 8-6" />
-
         </svg>
-
       );
 
-
-
     case "user":
-
       return (
-
         <svg {...common}>
-
           <circle cx="12" cy="8" r="4" />
 
           <path d="M4 21a8 8 0 0 1 16 0" />
-
         </svg>
-
       );
-
-
 
     case "close":
-
       return (
-
         <svg {...common}>
-
           <path d="m6 6 12 12M18 6 6 18" />
-
         </svg>
-
       );
-
-
 
     case "arrow":
-
       return (
-
         <svg {...common}>
-
           <path d="M7 17 17 7M7 7h10v10" />
-
         </svg>
-
       );
-
   }
-
 }
-
-
 
 /* Mobile tile navigation */
 
 function MobileTileMenu() {
-
   const [isOpen, setIsOpen] = useState(false);
 
   const [isClosing, setIsClosing] = useState(false);
@@ -412,530 +315,277 @@ function MobileTileMenu() {
 
   const shouldReduceMotion = useReducedMotion();
 
-
-
   function openMenu() {
+    const entranceOrder = [...menuTiles].sort(() => Math.random() - 0.5);
 
-    const entranceOrder = [...menuTiles].sort(
-
-      () => Math.random() - 0.5,
-
-    );
-
-
-
-    const exitOrder = [...menuTiles].sort(
-
-      () => Math.random() - 0.5,
-
-    );
-
-
+    const exitOrder = [...menuTiles].sort(() => Math.random() - 0.5);
 
     const nextTimings: Record<string, TileTiming> = {};
 
-
-
     menuTiles.forEach((tile) => {
-
       nextTimings[tile.id] = {
-
         open: shouldReduceMotion
-
           ? 0
-
           : entranceOrder.findIndex((item) => item.id === tile.id) * 0.035,
 
         exit: shouldReduceMotion
-
           ? 0
-
           : exitOrder.findIndex((item) => item.id === tile.id) * 0.025,
-
       };
-
     });
-
-
 
     setTimings(nextTimings);
 
     setIsClosing(false);
 
     setIsOpen(true);
-
   }
 
-
-
   function closeMenu() {
-
     if (!isOpen || isClosing) return;
-
-
 
     setIsClosing(true);
 
-
-
-    const exitDelay = shouldReduceMotion
-
-      ? 0
-
-      : (menuTiles.length - 1) * 25;
-
-
+    const exitDelay = shouldReduceMotion ? 0 : (menuTiles.length - 1) * 25;
 
     window.setTimeout(
-
       () => {
-
         setIsOpen(false);
 
         setIsClosing(false);
-
       },
 
       exitDelay + (shouldReduceMotion ? 120 : 240),
-
     );
-
   }
 
-
-
   useEffect(() => {
-
     if (!isOpen) return;
-
-
 
     const previousOverflow = document.body.style.overflow;
 
     document.body.style.overflow = "hidden";
 
-
-
     const handleKeyDown = (event: KeyboardEvent) => {
-
       if (event.key === "Escape") closeMenu();
-
     };
-
-
 
     window.addEventListener("keydown", handleKeyDown);
 
-
-
     return () => {
-
       document.body.style.overflow = previousOverflow;
 
       window.removeEventListener("keydown", handleKeyDown);
-
     };
-
   }, [isOpen, isClosing]);
 
-
-
   const tileVariants = {
-
     hidden: (timing: TileTiming) => ({
-
       opacity: 0,
 
       scale: 0.88,
 
       transition: {
-
         duration: shouldReduceMotion ? 0.1 : 0.22,
 
         delay: timing.exit,
 
         ease: [0.4, 0, 1, 1] as const,
-
       },
-
     }),
 
     visible: (timing: TileTiming) => ({
-
       opacity: 1,
 
       scale: 1,
 
       transition: {
-
         duration: shouldReduceMotion ? 0.1 : 0.42,
 
         delay: timing.open,
 
         ease: [0.22, 1, 0.36, 1] as const,
-
       },
-
     }),
-
   };
 
-
-
   return (
-
     <>
-
       <button
-
         type="button"
-
         onClick={isOpen ? closeMenu : openMenu}
-
         aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
-
         aria-expanded={isOpen}
-
         className="fixed right-4 top-4 z-[130] flex h-11 w-11 items-center justify-center border border-white/15 bg-[#151516] text-[#F8F8F5] shadow-lg transition-all duration-300 hover:border-[#B82134] hover:bg-[#B82134] lg:hidden"
-
       >
-
         {isOpen && !isClosing ? (
-
           <TileIcon name="close" />
-
         ) : (
-
-          <img
-
-            src="/logo.svg"
-
-            alt=""
-
-            className="h-7 w-7 object-contain"
-
-          />
-
+          <img src="/logo.svg" alt="" className="h-7 w-7 object-contain" />
         )}
-
       </button>
 
-
-
       <AnimatePresence>
-
         {isOpen && (
-
           <motion.div
-
             key="tile-navigation"
-
             initial={{ opacity: 0 }}
-
             animate={{ opacity: isClosing ? 0 : 1 }}
-
             exit={{ opacity: 0 }}
-
             transition={{
-
               duration: shouldReduceMotion ? 0.1 : 0.28,
 
               ease: [0.22, 1, 0.36, 1],
-
             }}
-
             onClick={closeMenu}
-
             className="fixed inset-0 z-[120] flex items-center justify-center overflow-hidden bg-[#0B0B0C]/[0.97] px-3 pb-3 pt-16 backdrop-blur-md lg:hidden"
-
           >
-
             <div
-
               onClick={(event) => event.stopPropagation()}
-
               className="flex max-h-full w-full max-w-[390px] flex-col"
-
             >
-
               <div className="mb-2 flex shrink-0 items-center justify-between">
-
                 <div>
-
                   <p className="text-[9px] font-semibold tracking-[0.28em] text-[#E85A6A]">
-
                     CAZMIRECREATES
-
                   </p>
 
                   <h2 className="mt-0.5 text-xs font-medium tracking-[0.16em] text-[#F8F8F5]">
-
                     NAVIGATION
-
                   </h2>
-
                 </div>
-
               </div>
 
-
-
               <div className="grid shrink-0 grid-cols-2 gap-1.5">
-
                 {menuTiles.map((tile) => {
-
                   const isActive =
-
                     pathname === tile.href ||
-
-                    (tile.href !== "/" &&
-
-                      pathname.startsWith(`${tile.href}/`));
-
-
+                    (tile.href !== "/" && pathname.startsWith(`${tile.href}/`));
 
                   const timing = timings[tile.id] ?? {
-
                     open: 0,
 
                     exit: 0,
-
                   };
-
-
 
                   const isHome = tile.id === "home";
 
-
-
                   return (
-
                     <motion.div
-
                       key={tile.id}
-
                       custom={timing}
-
                       variants={tileVariants}
-
                       initial="hidden"
-
                       animate={isClosing ? "hidden" : "visible"}
-
                       className={tile.className}
-
                     >
-
                       <Link
-
                         href={tile.href}
-
                         onClick={closeMenu}
-
                         aria-current={isActive ? "page" : undefined}
-
                         className={[
-
                           "group relative flex h-full min-h-0 w-full flex-col justify-between overflow-hidden p-3 text-left sm:p-4",
 
                           "border transition-[background-color,color,border-color] duration-300",
 
                           isActive
-
                             ? "border-[#B82134] bg-[#F8F8F5] text-[#151516] shadow-[inset_0_0_0_1px_#B82134]"
-
                             : isHome
-
                               ? "border-[#B82134] bg-[#B82134] text-white hover:bg-[#CE2C41]"
-
                               : "border-white/10 bg-[#242426] text-[#F8F8F5] hover:border-[#B82134] hover:bg-[#35161C]",
-
                         ].join(" ")}
-
                       >
-
                         {isHome ? (
-
                           <>
-
                             <div className="flex items-start justify-between">
-
                               <img
-
                                 src="/logo.svg"
-
                                 alt="CazmireCreates"
-
                                 className={[
-
                                   "h-9 w-9 object-contain sm:h-11 sm:w-11",
 
                                   isActive ? "brightness-0" : "",
-
                                 ].join(" ")}
-
                               />
 
                               <TileIcon
-
                                 name="arrow"
-
                                 className={[
-
                                   "h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5",
 
-                                  isActive
-
-                                    ? "text-[#B82134]"
-
-                                    : "text-white",
-
+                                  isActive ? "text-[#B82134]" : "text-white",
                                 ].join(" ")}
-
                               />
-
                             </div>
 
-
-
                             <div>
-
                               <p
-
                                 className={[
-
                                   "text-[9px] font-medium tracking-[0.2em]",
 
-                                  isActive
-
-                                    ? "text-[#B82134]"
-
-                                    : "text-white/90",
-
+                                  isActive ? "text-[#B82134]" : "text-white/90",
                                 ].join(" ")}
-
                               >
-
                                 CAZMIRECREATES
-
                               </p>
 
                               <span className="mt-0.5 block text-xl font-semibold tracking-tight sm:text-2xl">
-
                                 Home
-
                               </span>
-
                             </div>
-
                           </>
-
                         ) : (
-
                           <>
-
                             <div className="flex items-center justify-between">
-
                               {tile.icon && (
-
                                 <TileIcon
-
                                   name={tile.icon}
-
                                   className={[
-
                                     "h-5 w-5 transition-transform duration-300 group-hover:scale-110 sm:h-6 sm:w-6",
 
                                     isActive
-
                                       ? "text-[#B82134]"
-
                                       : "text-[#E85A6A]",
-
                                   ].join(" ")}
-
                                 />
-
                               )}
 
-
-
                               <TileIcon
-
                                 name="arrow"
-
                                 className={[
-
                                   "h-3.5 w-3.5 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5",
 
-                                  isActive
-
-                                    ? "text-[#B82134]"
-
-                                    : "text-white/65",
-
+                                  isActive ? "text-[#B82134]" : "text-white/65",
                                 ].join(" ")}
-
                               />
-
                             </div>
 
-
-
                             <span
-
                               className={[
-
                                 "mt-2 text-xs font-semibold leading-tight tracking-wide sm:text-sm",
 
-                                isActive
-
-                                  ? "text-[#151516]"
-
-                                  : "text-[#F8F8F5]",
-
+                                isActive ? "text-[#151516]" : "text-[#F8F8F5]",
                               ].join(" ")}
-
                             >
-
                               {tile.label}
-
                             </span>
-
                           </>
-
                         )}
-
                       </Link>
-
                     </motion.div>
-
                   );
-
                 })}
-
               </div>
 
-
-
               <p className="mt-2 shrink-0 text-center text-[8px] tracking-[0.16em] text-white/50">
-
                 VISUAL ARCHIVE · © 2026 CAZMIRECREATES
-
               </p>
-
             </div>
-
           </motion.div>
-
         )}
-
       </AnimatePresence>
-
     </>
-
   );
-
 }
 
 export default function VideoEditsPage() {
