@@ -1,18 +1,23 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+/* eslint-disable @next/next/no-img-element */
+
 import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
+  createContext,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Sidebar from "@/components/layout/Sidebar";
 
-const R2_BASE =
-  "https://pub-dcd3ffb0390d4c59a42236b0a9d89050.r2.dev";
+const R2_BASE = "https://pub-dcd3ffb0390d4c59a42236b0a9d89050.r2.dev";
 
 const VIDEO_EDITS_WORKER =
   "https://video-edits-gallery.zyrell-baculi3.workers.dev";
@@ -20,10 +25,15 @@ const VIDEO_EDITS_WORKER =
 const PHOTOGRAPHY_WORKER =
   "https://photography-gallery.zyrell-baculi3.workers.dev";
 
+/* How many files per album the home page uses for its preview. */
+const PREVIEW_LIMIT = 5;
+
 type GalleryFile = {
   key: string;
   filename: string;
 };
+
+type MediaType = "image" | "video";
 
 type TileIconName =
   | "video"
@@ -188,17 +198,14 @@ function MobileTileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [timings, setTimings] = useState<Record<string, TileTiming>>({});
+  const closeTimer = useRef<number | null>(null);
   const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
 
-  function openMenu() {
-    const entranceOrder = [...menuTiles].sort(
-      () => Math.random() - 0.5,
-    );
+  const openMenu = useCallback(() => {
+    const entranceOrder = [...menuTiles].sort(() => Math.random() - 0.5);
 
-    const exitOrder = [...menuTiles].sort(
-      () => Math.random() - 0.5,
-    );
+    const exitOrder = [...menuTiles].sort(() => Math.random() - 0.5);
 
     const nextTimings: Record<string, TileTiming> = {};
 
@@ -206,37 +213,43 @@ function MobileTileMenu() {
       nextTimings[tile.id] = {
         open: shouldReduceMotion
           ? 0
-          : entranceOrder.findIndex((item) => item.id === tile.id) *
-            0.035,
+          : entranceOrder.findIndex((item) => item.id === tile.id) * 0.035,
         exit: shouldReduceMotion
           ? 0
-          : exitOrder.findIndex((item) => item.id === tile.id) *
-            0.025,
+          : exitOrder.findIndex((item) => item.id === tile.id) * 0.025,
       };
     });
 
     setTimings(nextTimings);
     setIsClosing(false);
     setIsOpen(true);
-  }
+  }, [shouldReduceMotion]);
 
-  function closeMenu() {
+  const closeMenu = useCallback(() => {
     if (!isOpen || isClosing) return;
 
     setIsClosing(true);
 
-    const exitDelay = shouldReduceMotion
-      ? 0
-      : (menuTiles.length - 1) * 25;
+    const exitDelay = shouldReduceMotion ? 0 : (menuTiles.length - 1) * 25;
 
-    window.setTimeout(
+    closeTimer.current = window.setTimeout(
       () => {
         setIsOpen(false);
         setIsClosing(false);
+        closeTimer.current = null;
       },
       exitDelay + (shouldReduceMotion ? 120 : 240),
     );
-  }
+  }, [isOpen, isClosing, shouldReduceMotion]);
+
+  // Clear a pending close timer if the component unmounts (e.g. navigation)
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current !== null) {
+        window.clearTimeout(closeTimer.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -254,7 +267,7 @@ function MobileTileMenu() {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, isClosing]);
+  }, [isOpen, closeMenu]);
 
   const tileVariants = {
     hidden: (timing: TileTiming) => ({
@@ -282,20 +295,14 @@ function MobileTileMenu() {
       <button
         type="button"
         onClick={isOpen ? closeMenu : openMenu}
-        aria-label={
-          isOpen ? "Close navigation menu" : "Open navigation menu"
-        }
+        aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
         aria-expanded={isOpen}
         className="fixed right-4 top-4 z-[130] flex h-11 w-11 items-center justify-center border border-white/15 bg-[#151516] text-[#F8F8F5] shadow-lg transition-all duration-300 hover:border-[#B82134] hover:bg-[#B82134] lg:hidden"
       >
         {isOpen && !isClosing ? (
           <TileIcon name="close" />
         ) : (
-          <img
-            src="/logo.svg"
-            alt=""
-            className="h-7 w-7 object-contain"
-          />
+          <img src="/logo.svg" alt="" className="h-7 w-7 object-contain" />
         )}
       </button>
 
@@ -332,8 +339,7 @@ function MobileTileMenu() {
                 {menuTiles.map((tile) => {
                   const isActive =
                     pathname === tile.href ||
-                    (tile.href !== "/" &&
-                      pathname.startsWith(`${tile.href}/`));
+                    (tile.href !== "/" && pathname.startsWith(`${tile.href}/`));
 
                   const timing = timings[tile.id] ?? {
                     open: 0,
@@ -380,9 +386,7 @@ function MobileTileMenu() {
                                 name="arrow"
                                 className={[
                                   "h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5",
-                                  isActive
-                                    ? "text-[#B82134]"
-                                    : "text-white",
+                                  isActive ? "text-[#B82134]" : "text-white",
                                 ].join(" ")}
                               />
                             </div>
@@ -391,9 +395,7 @@ function MobileTileMenu() {
                               <p
                                 className={[
                                   "text-[9px] font-medium tracking-[0.2em]",
-                                  isActive
-                                    ? "text-[#B82134]"
-                                    : "text-white/90",
+                                  isActive ? "text-[#B82134]" : "text-white/90",
                                 ].join(" ")}
                               >
                                 CAZMIRECREATES
@@ -422,9 +424,7 @@ function MobileTileMenu() {
                                 name="arrow"
                                 className={[
                                   "h-3.5 w-3.5 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5",
-                                  isActive
-                                    ? "text-[#B82134]"
-                                    : "text-white/65",
+                                  isActive ? "text-[#B82134]" : "text-white/65",
                                 ].join(" ")}
                               />
                             </div>
@@ -432,9 +432,7 @@ function MobileTileMenu() {
                             <span
                               className={[
                                 "mt-2 text-xs font-semibold leading-tight tracking-wide sm:text-sm",
-                                isActive
-                                  ? "text-[#151516]"
-                                  : "text-[#F8F8F5]",
+                                isActive ? "text-[#151516]" : "text-[#F8F8F5]",
                               ].join(" ")}
                             >
                               {tile.label}
@@ -503,139 +501,305 @@ const featuredWork = {
   ],
 };
 
+const graphicImages = featuredWork.graphics.map((project) => project.image);
+
+/* -------------------------------------------------------------------------- */
+/* Gallery data: module-level cache so revisiting Home is instant             */
+/* -------------------------------------------------------------------------- */
+
+const galleryCache = new Map<string, string[]>();
+const inflight = new Map<string, Promise<string[]>>();
+
+const MEDIA_PATTERNS: Record<MediaType, RegExp> = {
+  video: /\.(mp4|webm|mov|m4v|ogv)$/i,
+  image: /\.(jpe?g|png|webp|avif|gif)$/i,
+};
+
+async function fetchGallery(
+  workerUrl: string,
+  album: string,
+  type: MediaType,
+  limit: number,
+): Promise<string[]> {
+  const response = await fetch(
+    `${workerUrl}?album=${encodeURIComponent(album)}`,
+  );
+
+  if (!response.ok) {
+    throw new Error(`Gallery request failed: ${response.status}`);
+  }
+
+  const data: { files?: GalleryFile[] } = await response.json();
+  const pattern = MEDIA_PATTERNS[type];
+
+  return (data.files ?? [])
+    .filter((file) => pattern.test(file.filename))
+    .slice(0, limit)
+    .map((file) => {
+      const encodedKey = file.key
+        .split("/")
+        .map((part) => encodeURIComponent(part))
+        .join("/");
+
+      return `${R2_BASE}/${encodedKey}`;
+    });
+}
+
+const EMPTY_MEDIA: string[] = [];
+
 function useGalleryMedia(
   workerUrl: string,
   album: string,
-  type: "image" | "video" = "image",
+  type: MediaType = "image",
+  limit = PREVIEW_LIMIT,
 ) {
-  const [media, setMedia] = useState<string[]>([]);
+  const key = `${workerUrl}|${album}|${type}|${limit}`;
+
+  // Only used to re-render once a fetch finishes and the cache is filled
+  const [, setVersion] = useState(0);
 
   useEffect(() => {
+    if (galleryCache.has(key)) return;
+
     let cancelled = false;
 
-    async function loadMedia() {
-      try {
-        const response = await fetch(
-          `${workerUrl}?album=${encodeURIComponent(album)}`,
-        );
-
-        if (!response.ok) {
-          throw new Error(`Gallery request failed: ${response.status}`);
-        }
-
-        const data: { files?: GalleryFile[] } = await response.json();
-
-        const files = (data.files ?? []).filter((file) => {
-          const filename = file.filename.toLowerCase();
-
-          return type === "video"
-            ? /\.(mp4|webm|mov|m4v|ogv)$/i.test(filename)
-            : /\.(jpe?g|png|webp|avif|gif)$/i.test(filename);
-        });
-
-        if (!cancelled) {
-          setMedia(
-            files.map((file) => {
-              const encodedKey = file.key
-                .split("/")
-                .map((part) => encodeURIComponent(part))
-                .join("/");
-
-              return `${R2_BASE}/${encodedKey}`;
-            }),
-          );
-        }
-      } catch (error) {
-        console.error(`Could not load gallery "${album}":`, error);
-
-        if (!cancelled) {
-          setMedia([]);
-        }
-      }
+    let promise = inflight.get(key);
+    if (!promise) {
+      promise = fetchGallery(workerUrl, album, type, limit).finally(() =>
+        inflight.delete(key),
+      );
+      inflight.set(key, promise);
     }
 
-    setMedia([]);
-    void loadMedia();
+    promise
+      .then((urls) => {
+        galleryCache.set(key, urls);
+        if (!cancelled) setVersion((version) => version + 1);
+      })
+      .catch((error) => {
+        console.error(`Could not load gallery "${album}":`, error);
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [workerUrl, album, type]);
+  }, [key, workerUrl, album, type, limit]);
 
-  return media;
+  return galleryCache.get(key) ?? EMPTY_MEDIA;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Slideshow                                                                  */
+/* -------------------------------------------------------------------------- */
+
+function useInView<T extends Element>(rootMargin = "200px") {
+  const ref = useRef<T | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    if (typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { rootMargin },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [rootMargin]);
+
+  return [ref, inView] as const;
+}
+
+/* Only plays while it is the active slide and on screen */
+function SlideVideo({
+  src,
+  label,
+  playing,
+  active,
+}: {
+  src: string;
+  label: string;
+  playing: boolean;
+  active: boolean;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (playing) {
+      void video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [playing]);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      muted
+      loop
+      playsInline
+      preload={active ? "auto" : "metadata"}
+      aria-label={label}
+      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+    />
+  );
+}
+
+function SlideDots({
+  count,
+  activeIndex,
+}: {
+  count: number;
+  activeIndex: number;
+}) {
+  if (count < 2) return null;
+
+  return (
+    <div className="absolute bottom-3 right-3 z-10 flex gap-1.5">
+      {Array.from({ length: count }, (_, index) => (
+        <span
+          key={index}
+          className={`h-1 rounded-full transition-all duration-300 ${
+            index === activeIndex ? "w-5 bg-[#B82134]" : "w-1.5 bg-white/70"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+const EmptySlide = () => (
+  <div className="absolute inset-0 flex items-center justify-center bg-[#E8E5DF]">
+    <span className="h-px w-10 bg-[#B82134]/40" />
+  </div>
+);
+
+/*
+ * Renders only the previous, active and next slides instead of every file,
+ * so the browser doesn't download/decode the whole album at once.
+ * The previous slide stays mounted so the cross-fade still works.
+ */
+const Slideshow = memo(function Slideshow({
+  media,
+  alt,
+  type,
+  interval,
+  priority,
+}: {
+  media: string[];
+  alt: string;
+  type: MediaType;
+  interval: number;
+  priority: boolean;
+}) {
+  const [rootRef, inView] = useInView<HTMLDivElement>();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [prevMedia, setPrevMedia] = useState(media);
+  const count = media.length;
+
+  // Reset to the first slide when the list changes
+  if (prevMedia !== media) {
+    setPrevMedia(media);
+    setActiveIndex(0);
+  }
+
+  // Only rotate while visible
+  useEffect(() => {
+    if (count < 2 || !inView) return;
+
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % count);
+    }, interval);
+
+    return () => window.clearInterval(timer);
+  }, [count, interval, inView]);
+
+  if (count === 0) {
+    return (
+      <div
+        ref={rootRef}
+        className="absolute inset-0 overflow-hidden bg-[#E8E5DF]"
+      >
+        <EmptySlide />
+      </div>
+    );
+  }
+
+  const current = activeIndex % count;
+  const previous = (current - 1 + count) % count;
+  const next = (current + 1) % count;
+  const mounted = new Set([previous, current, next]);
+
+  return (
+    <div
+      ref={rootRef}
+      className="absolute inset-0 overflow-hidden bg-[#E8E5DF]"
+    >
+      {media.map((src, index) => {
+        if (!mounted.has(index)) return null;
+
+        const isActive = index === current;
+
+        return (
+          <div
+            key={src}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              isActive ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {type === "video" ? (
+              <SlideVideo
+                src={src}
+                label={`${alt} ${index + 1}`}
+                active={isActive}
+                playing={isActive && inView}
+              />
+            ) : (
+              <img
+                src={src}
+                alt={`${alt} ${index + 1}`}
+                loading={priority && index === 0 ? "eager" : "lazy"}
+                decoding="async"
+                fetchPriority={priority && index === 0 ? "high" : "auto"}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+              />
+            )}
+          </div>
+        );
+      })}
+
+      <SlideDots count={count} activeIndex={current} />
+    </div>
+  );
+});
 
 function ImageSlideshow({
   images,
   alt,
   interval = 4000,
+  priority = false,
 }: {
   images: string[];
   alt: string;
   interval?: number;
+  priority?: boolean;
 }) {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    if (images.length < 2) {
-      setActiveIndex(0);
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % images.length);
-    }, interval);
-
-    return () => window.clearInterval(timer);
-  }, [images.length, interval]);
-
-  useEffect(() => {
-    if (activeIndex >= images.length) {
-      setActiveIndex(0);
-    }
-  }, [activeIndex, images.length]);
-
-  if (images.length === 0) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center bg-[#E8E5DF]">
-        <span className="h-px w-10 bg-[#B82134]/40" />
-      </div>
-    );
-  }
-
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#E8E5DF]">
-      {images.map((src, index) => (
-        <div
-          key={src}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === activeIndex ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <img
-            src={src}
-            alt={`${alt} ${index + 1}`}
-            loading={index === 0 ? "eager" : "lazy"}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-          />
-        </div>
-      ))}
-
-      {images.length > 1 && (
-        <div className="absolute bottom-3 right-3 z-10 flex gap-1.5">
-          {images.map((_, index) => (
-            <span
-              key={index}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                index === activeIndex
-                  ? "w-5 bg-[#B82134]"
-                  : "w-1.5 bg-white/70"
-              }`}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    <Slideshow
+      media={images}
+      alt={alt}
+      type="image"
+      interval={interval}
+      priority={priority}
+    />
   );
 }
 
@@ -645,84 +809,25 @@ function GallerySlideshow({
   alt,
   type = "image",
   interval = 4000,
+  priority = false,
 }: {
   workerUrl: string;
   album: string;
   alt: string;
-  type?: "image" | "video";
+  type?: MediaType;
   interval?: number;
+  priority?: boolean;
 }) {
   const media = useGalleryMedia(workerUrl, album, type);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [album]);
-
-  useEffect(() => {
-    if (media.length < 2) return;
-
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % media.length);
-    }, interval);
-
-    return () => window.clearInterval(timer);
-  }, [media.length, interval]);
-
-  if (media.length === 0) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center bg-[#E8E5DF]">
-        <span className="h-px w-10 bg-[#B82134]/40" />
-      </div>
-    );
-  }
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#E8E5DF]">
-      {media.map((src, index) => (
-        <div
-          key={src}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === activeIndex ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          {type === "video" ? (
-            <video
-              src={src}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              aria-label={`${alt} ${index + 1}`}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-            />
-          ) : (
-            <img
-              src={src}
-              alt={`${alt} ${index + 1}`}
-              loading={index === 0 ? "eager" : "lazy"}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-            />
-          )}
-        </div>
-      ))}
-
-      {media.length > 1 && (
-        <div className="absolute bottom-3 right-3 z-10 flex gap-1.5">
-          {media.map((_, index) => (
-            <span
-              key={index}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                index === activeIndex
-                  ? "w-5 bg-[#B82134]"
-                  : "w-1.5 bg-white/70"
-              }`}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    <Slideshow
+      media={media}
+      alt={alt}
+      type={type}
+      interval={interval}
+      priority={priority}
+    />
   );
 }
 
@@ -786,224 +891,353 @@ function WorkLabel({
   );
 }
 
-export default function Home() {
-  const graphicImages = featuredWork.graphics.map((project) => project.image);
+/* -------------------------------------------------------------------------- */
+/* Tile zoom-in on enter / zoom-out on leave                                   */
+/* -------------------------------------------------------------------------- */
+
+const TILE_ENTER_MS = 700;
+const TILE_ENTER_STAGGER_MS = 90;
+const TILE_EXIT_MS = 450;
+const TILE_EXIT_STAGGER_MS = 40;
+const TILE_COUNT = 5;
+// Wait for the last tile to finish zooming out before navigating
+const LEAVE_DELAY_MS =
+  (TILE_COUNT - 1) * TILE_EXIT_STAGGER_MS + TILE_EXIT_MS + 20;
+
+const TileMotionContext = createContext({ shown: true, reduced: false });
+
+function FeaturedTile({
+  index,
+  href,
+  className,
+  children,
+}: {
+  index: number;
+  href: string;
+  className: string;
+  children: ReactNode;
+}) {
+  const { shown, reduced } = useContext(TileMotionContext);
+
+  const style = reduced
+    ? undefined
+    : {
+        transitionDelay: `${
+          index * (shown ? TILE_ENTER_STAGGER_MS : TILE_EXIT_STAGGER_MS)
+        }ms`,
+        transitionDuration: `${shown ? TILE_ENTER_MS : TILE_EXIT_MS}ms`,
+      };
 
   return (
-    <main className="min-h-screen bg-[#F8F8F5] text-[#151516] lg:pl-[270px]">
-      <Sidebar />
+    <Link
+      href={href}
+      style={style}
+      className={[
+        className,
+        reduced
+          ? ""
+          : "transition-[opacity,transform] ease-[cubic-bezier(0.22,1,0.36,1)]",
+        shown || reduced ? "scale-100 opacity-100" : "scale-90 opacity-0",
+      ].join(" ")}
+    >
+      {children}
+    </Link>
+  );
+}
 
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -right-8 top-24 text-[130px] font-light leading-none tracking-[-0.08em] text-[#151516]/[0.025] md:right-8 md:text-[180px]">
-            映像
-          </div>
+export default function Home() {
+  const router = useRouter();
+  const shouldReduceMotion = useReducedMotion() ?? false;
+  const [mounted, setMounted] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const leaveTimer = useRef<number | null>(null);
 
-          <div className="absolute bottom-16 left-4 text-[80px] font-light leading-none text-[#B82134]/[0.025] md:left-10 md:text-[100px]">
-            作品
-          </div>
+  // Zoom tiles in after first paint
+  useEffect(() => {
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => setMounted(true));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
-          <div className="absolute right-7 top-8 h-16 w-px bg-[#B82134]/20 md:right-12 md:top-12 md:h-20" />
-          <div className="absolute right-7 top-24 h-px w-12 bg-[#B82134]/20 md:right-12 md:top-32 md:w-20" />
-        </div>
+  // Zoom tiles out before navigating to another page
+  useEffect(() => {
+    if (shouldReduceMotion) return;
 
-        {/* Mobile navigation */}
-        <MobileTileMenu />
+    const onClick = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
 
-        {/* Header */}
-        <header className="relative flex items-center justify-between px-5 pb-4 pt-5 sm:px-8 md:px-12 md:pb-5 md:pt-7 lg:px-16">
-          <div>
-            <p className="text-[8px] tracking-[0.25em] text-[#151516]/40 md:text-[9px] md:tracking-[0.3em]">
-              PORTFOLIO / 001
-            </p>
+      const anchor = (event.target as Element | null)?.closest("a");
+      if (
+        !anchor ||
+        anchor.target === "_blank" ||
+        anchor.hasAttribute("download")
+      ) {
+        return;
+      }
 
-            <h1 className="mt-2 text-3xl font-bold tracking-[-0.05em] text-[#B82134] sm:text-4xl md:text-5xl">
-              HOME
-            </h1>
-          </div>
+      const url = new URL(anchor.href, window.location.href);
+      if (
+        url.origin !== window.location.origin ||
+        url.pathname === window.location.pathname
+      ) {
+        return;
+      }
 
-          <div className="hidden text-right sm:block">
-            <p className="text-[8px] tracking-[0.2em] text-[#151516]/35">
-              MULTIMEDIA DESIGNER
-            </p>
-            <p className="mt-1 text-[8px] tracking-[0.15em] text-[#151516]/25">
-              PHOTOGRAPHY / VIDEO / DESIGN
-            </p>
-          </div>
-        </header>
+      event.preventDefault();
+      if (leaveTimer.current !== null) return;
 
-        {/* Bento portfolio */}
-        <div className="relative px-5 pb-0 sm:px-8 md:px-12 md:pb-0 lg:px-16">
-          <div className="mb-3 flex items-end justify-between gap-4 md:mb-4">
-            <div>
-              <p className="text-[8px] tracking-[0.28em] text-[#B82134] md:text-[9px]">
-                A CURATED COLLECTION
-              </p>
-              <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.04em] sm:text-2xl">
-                Selected Works
-              </h2>
+      setLeaving(true);
+      leaveTimer.current = window.setTimeout(() => {
+        router.push(`${url.pathname}${url.search}${url.hash}`);
+      }, LEAVE_DELAY_MS);
+    };
+
+    document.addEventListener("click", onClick, true);
+
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      if (leaveTimer.current !== null) {
+        window.clearTimeout(leaveTimer.current);
+        leaveTimer.current = null;
+      }
+    };
+  }, [router, shouldReduceMotion]);
+
+  return (
+    <TileMotionContext.Provider
+      value={{ shown: mounted && !leaving, reduced: shouldReduceMotion }}
+    >
+      <main className="min-h-screen bg-[#F8F8F5] text-[#151516] lg:pl-[270px]">
+        <Sidebar />
+
+        <section className="relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -right-8 top-24 text-[130px] font-light leading-none tracking-[-0.08em] text-[#151516]/[0.025] md:right-8 md:text-[180px]">
+              映像
             </div>
 
-            <p className="hidden max-w-[170px] text-right text-[10px] leading-5 text-[#151516]/45 sm:block">
-              A selection of projects across my creative disciplines.
-            </p>
+            <div className="absolute bottom-16 left-4 text-[80px] font-light leading-none text-[#B82134]/[0.025] md:left-10 md:text-[100px]">
+              作品
+            </div>
+
+            <div className="absolute right-7 top-8 h-16 w-px bg-[#B82134]/20 md:right-12 md:top-12 md:h-20" />
+            <div className="absolute right-7 top-24 h-px w-12 bg-[#B82134]/20 md:right-12 md:top-32 md:w-20" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-6">
-            {/* Video Edits */}
-            <Link
-              href={featuredWork.videoEdits.href}
-              className="group relative col-span-2 flex min-h-[230px] flex-col justify-between overflow-hidden bg-[#E8E5DF] p-4 sm:min-h-[260px] sm:p-5 lg:col-span-3 lg:min-h-[300px]"
-            >
-              <GallerySlideshow
-                workerUrl={VIDEO_EDITS_WORKER}
-                album={featuredWork.videoEdits.album}
-                alt="Energy Drinks video edit"
-                type="video"
-              />
+          {/* Mobile navigation */}
+          <MobileTileMenu />
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/25" />
+          {/* Header */}
+          <header className="relative flex items-center justify-between px-5 pb-4 pt-5 sm:px-8 md:px-12 md:pb-5 md:pt-7 lg:px-16">
+            <div>
+              <p className="text-[8px] tracking-[0.25em] text-[#151516]/40 md:text-[9px] md:tracking-[0.3em]">
+                PORTFOLIO / 001
+              </p>
 
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="border border-white/35 px-2 py-1 text-[8px] tracking-[0.2em] text-white">
-                  VIDEO
-                </span>
-                <span className="text-[9px] tracking-[0.2em] text-white/70">
-                  01
-                </span>
+              <h1 className="mt-2 text-3xl font-bold tracking-[-0.05em] text-[#B82134] sm:text-4xl md:text-5xl">
+                HOME
+              </h1>
+            </div>
+
+            <div className="hidden text-right sm:block">
+              <p className="text-[8px] tracking-[0.2em] text-[#151516]/35">
+                MULTIMEDIA DESIGNER
+              </p>
+              <p className="mt-1 text-[8px] tracking-[0.15em] text-[#151516]/25">
+                PHOTOGRAPHY / VIDEO / DESIGN
+              </p>
+            </div>
+          </header>
+
+          {/* Bento portfolio */}
+          <div className="relative px-5 pb-0 sm:px-8 md:px-12 md:pb-0 lg:px-16">
+            <div className="mb-3 flex items-end justify-between gap-4 md:mb-4">
+              <div>
+                <p className="text-[8px] tracking-[0.28em] text-[#B82134] md:text-[9px]">
+                  A CURATED COLLECTION
+                </p>
+                <h2 className="mt-1.5 text-xl font-semibold tracking-[-0.04em] sm:text-2xl">
+                  Selected Works
+                </h2>
               </div>
 
-              <WorkLabel
-                number="01"
-                title="Video Edits"
-                description="Editing / Post-production"
-                light
-              />
-            </Link>
+              <p className="hidden max-w-[170px] text-right text-[10px] leading-5 text-[#151516]/45 sm:block">
+                A selection of projects across my creative disciplines.
+              </p>
+            </div>
 
-            {/* Videography */}
-            <Link
-              href={featuredWork.videography.href}
-              className="group relative col-span-2 flex min-h-[180px] flex-col justify-between overflow-hidden bg-[#E8E5DF] p-4 sm:min-h-[200px] sm:p-5 lg:col-span-3 lg:min-h-[300px]"
-            >
-              <GallerySlideshow
-                workerUrl={VIDEO_EDITS_WORKER}
-                album="cinematic-vlogs"
-                alt="Cinematic video preview"
-                type="video"
-              />
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-6">
+              {/* Video Edits */}
+              <FeaturedTile
+                index={0}
+                href={featuredWork.videoEdits.href}
+                className="group relative col-span-2 flex min-h-[230px] flex-col justify-between overflow-hidden bg-[#E8E5DF] p-4 sm:min-h-[260px] sm:p-5 lg:col-span-3 lg:min-h-[300px]"
+              >
+                <GallerySlideshow
+                  workerUrl={VIDEO_EDITS_WORKER}
+                  album={featuredWork.videoEdits.album}
+                  alt="Energy Drinks video edit"
+                  type="video"
+                  priority
+                />
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/25" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/25" />
 
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="border border-white/35 px-2 py-1 text-[8px] tracking-[0.2em] text-white">
-                  VIDEOGRAPHY
-                </span>
-                <span className="text-[9px] tracking-[0.2em] text-white/70">
-                  02
-                </span>
-              </div>
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="border border-white/35 px-2 py-1 text-[8px] tracking-[0.2em] text-white">
+                    VIDEO
+                  </span>
+                  <span className="text-[9px] tracking-[0.2em] text-white/70">
+                    01
+                  </span>
+                </div>
 
-              <WorkLabel
-                number="02"
-                title="Videography"
-                description="Filmmaking / Visual storytelling"
-                light
-              />
-            </Link>
+                <WorkLabel
+                  number="01"
+                  title="Video Edits"
+                  description="Editing / Post-production"
+                  light
+                />
+              </FeaturedTile>
 
-            {/* Photography preview 1 */}
-            <Link
-              href={featuredWork.photography[0].href}
-              className="group relative col-span-1 flex min-h-[190px] flex-col justify-between overflow-hidden bg-[#E8E5DF] p-3.5 sm:min-h-[230px] sm:p-5 lg:col-span-2 lg:min-h-[240px]"
-            >
-              <GallerySlideshow
-                workerUrl={PHOTOGRAPHY_WORKER}
-                album={featuredWork.photography[0].album}
-                alt={featuredWork.photography[0].title}
-              />
+              {/* Videography */}
+              <FeaturedTile
+                index={1}
+                href={featuredWork.videography.href}
+                className="group relative col-span-2 flex min-h-[180px] flex-col justify-between overflow-hidden bg-[#E8E5DF] p-4 sm:min-h-[200px] sm:p-5 lg:col-span-3 lg:min-h-[300px]"
+              >
+                <GallerySlideshow
+                  workerUrl={VIDEO_EDITS_WORKER}
+                  album="cinematic-vlogs"
+                  alt="Cinematic video preview"
+                  type="video"
+                />
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/25" />
 
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="border border-white/35 px-2 py-1 text-[7px] tracking-[0.15em] text-white sm:text-[8px]">
-                  PHOTO
-                </span>
-                <span className="text-[9px] tracking-[0.15em] text-white/70">
-                  03
-                </span>
-              </div>
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="border border-white/35 px-2 py-1 text-[8px] tracking-[0.2em] text-white">
+                    VIDEOGRAPHY
+                  </span>
+                  <span className="text-[9px] tracking-[0.2em] text-white/70">
+                    02
+                  </span>
+                </div>
 
-              <WorkLabel
-                number="03"
-                title={featuredWork.photography[0].title}
-                description={featuredWork.photography[0].description}
-                light
-              />
-            </Link>
+                <WorkLabel
+                  number="02"
+                  title="Videography"
+                  description="Filmmaking / Visual storytelling"
+                  light
+                />
+              </FeaturedTile>
 
-            {/* Photography preview 2 */}
-            <Link
-              href={featuredWork.photography[1].href}
-              className="group relative col-span-1 flex min-h-[190px] flex-col justify-between overflow-hidden bg-[#E8E5DF] p-3.5 sm:min-h-[230px] sm:p-5 lg:col-span-2 lg:min-h-[240px]"
-            >
-              <GallerySlideshow
-                workerUrl={PHOTOGRAPHY_WORKER}
-                album={featuredWork.photography[1].album}
-                alt={featuredWork.photography[1].title}
-              />
+              {/* Photography preview 1 */}
+              <FeaturedTile
+                index={2}
+                href={featuredWork.photography[0].href}
+                className="group relative col-span-1 flex min-h-[190px] flex-col justify-between overflow-hidden bg-[#E8E5DF] p-3.5 sm:min-h-[230px] sm:p-5 lg:col-span-2 lg:min-h-[240px]"
+              >
+                <GallerySlideshow
+                  workerUrl={PHOTOGRAPHY_WORKER}
+                  album={featuredWork.photography[0].album}
+                  alt={featuredWork.photography[0].title}
+                />
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20" />
 
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="border border-white/35 px-2 py-1 text-[7px] tracking-[0.15em] text-white sm:text-[8px]">
-                  PHOTO
-                </span>
-                <span className="text-[9px] tracking-[0.15em] text-white/70">
-                  04
-                </span>
-              </div>
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="border border-white/35 px-2 py-1 text-[7px] tracking-[0.15em] text-white sm:text-[8px]">
+                    PHOTO
+                  </span>
+                  <span className="text-[9px] tracking-[0.15em] text-white/70">
+                    03
+                  </span>
+                </div>
 
-              <WorkLabel
-                number="04"
-                title={featuredWork.photography[1].title}
-                description={featuredWork.photography[1].description}
-                light
-              />
-            </Link>
+                <WorkLabel
+                  number="03"
+                  title={featuredWork.photography[0].title}
+                  description={featuredWork.photography[0].description}
+                  light
+                />
+              </FeaturedTile>
 
-            {/* Graphics Design */}
-            <Link
-              href="/graphics-design"
-              className="group relative col-span-2 flex min-h-[210px] flex-col justify-between overflow-hidden bg-[#E8E5DF] p-4 sm:min-h-[250px] sm:p-5 lg:col-span-2 lg:min-h-[240px]"
-            >
-              <ImageSlideshow
-                images={graphicImages}
-                alt="Graphic design portfolio preview"
-                interval={3500}
-              />
+              {/* Photography preview 2 */}
+              <FeaturedTile
+                index={3}
+                href={featuredWork.photography[1].href}
+                className="group relative col-span-1 flex min-h-[190px] flex-col justify-between overflow-hidden bg-[#E8E5DF] p-3.5 sm:min-h-[230px] sm:p-5 lg:col-span-2 lg:min-h-[240px]"
+              >
+                <GallerySlideshow
+                  workerUrl={PHOTOGRAPHY_WORKER}
+                  album={featuredWork.photography[1].album}
+                  alt={featuredWork.photography[1].title}
+                />
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20" />
 
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="border border-white/35 px-2 py-1 text-[8px] tracking-[0.15em] text-white">
-                  GRAPHIC DESIGN
-                </span>
-                <span className="text-[9px] tracking-[0.15em] text-white/70">
-                  05
-                </span>
-              </div>
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="border border-white/35 px-2 py-1 text-[7px] tracking-[0.15em] text-white sm:text-[8px]">
+                    PHOTO
+                  </span>
+                  <span className="text-[9px] tracking-[0.15em] text-white/70">
+                    04
+                  </span>
+                </div>
 
-              <WorkLabel
-                number="05"
-                title="Graphics Design"
-                description="Visuals / Art direction"
-                light
-              />
-            </Link>
+                <WorkLabel
+                  number="04"
+                  title={featuredWork.photography[1].title}
+                  description={featuredWork.photography[1].description}
+                  light
+                />
+              </FeaturedTile>
+
+              {/* Graphics Design */}
+              <FeaturedTile
+                index={4}
+                href="/graphics-design"
+                className="group relative col-span-2 flex min-h-[210px] flex-col justify-between overflow-hidden bg-[#E8E5DF] p-4 sm:min-h-[250px] sm:p-5 lg:col-span-2 lg:min-h-[240px]"
+              >
+                <ImageSlideshow
+                  images={graphicImages}
+                  alt="Graphic design portfolio preview"
+                  interval={3500}
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/20" />
+
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="border border-white/35 px-2 py-1 text-[8px] tracking-[0.15em] text-white">
+                    GRAPHIC DESIGN
+                  </span>
+                  <span className="text-[9px] tracking-[0.15em] text-white/70">
+                    05
+                  </span>
+                </div>
+
+                <WorkLabel
+                  number="05"
+                  title="Graphics Design"
+                  description="Visuals / Art direction"
+                  light
+                />
+              </FeaturedTile>
+            </div>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+    </TileMotionContext.Provider>
   );
 }
